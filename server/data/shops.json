@@ -12,5 +12,33 @@
     "rating": 0,
     "reviewCount": 0,
     "createdAt": "2026-07-12T12:57:27.429Z"
+  },
+  {
+    "id": "shop_mrhvmd9kby6et07",
+    "userId": "user_mrhvmd9fg7a8z6d",
+    "slug": "jamjam",
+    "shopName": "jamjam",
+    "bio": "Welcome to my shop!",
+    "location": "",
+    "currency": "$",
+    "whatsappNumber": "",
+    "logo": "https://api.dicebear.com/7.x/shapes/svg?seed=jamjam",
+    "rating": 0,
+    "reviewCount": 0,
+    "createdAt": "2026-07-12T14:16:09.897Z"
+  },
+  {
+    "id": "shop_mrxxelbqs7jpjhq",
+    "userId": "user_mrxxelaheka0zxi",
+    "slug": "name",
+    "shopName": "name",
+    "bio": "Welcome to my shop!",
+    "location": "",
+    "currency": "$",
+    "whatsappNumber": "",
+    "logo": "https://api.dicebear.com/7.x/shapes/svg?seed=name",
+    "rating": 0,
+    "reviewCount": 0,
+    "createdAt": "2026-07-23T19:50:25.143Z"
   }
 ]
