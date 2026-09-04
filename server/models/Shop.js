@@ -7,7 +7,7 @@ const shopSchema = new mongoose.Schema(
     shopName:       { type: String, required: true, trim: true },
     bio:            { type: String, default: 'Welcome to my shop!' },
     location:       { type: String, default: '' },
-    currency:       { type: String, default: '$' },
+    currency:       { type: String, default: '#' },
     whatsappNumber: { type: String, default: '' },
     logo:           { type: String, default: '' },
   },
