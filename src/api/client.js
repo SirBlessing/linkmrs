@@ -1,16 +1,17 @@
-// ─────────────────────────────────────────────────────────────
-//  Vendly API client
-//  All calls go to /api/... (proxied to Express in dev via
-//  vite.config.js; served directly in production single-server mode)
-// ─────────────────────────────────────────────────────────────
+// src/api/client.js
+// VITE_API_URL is set to your Render backend URL in production
+// In development it's empty so Vite's proxy handles /api/* → localhost:4000
+
+const BASE = import.meta.env.VITE_API_URL || 'https://linkmrs.onrender.com';
 const TOKEN_KEY = 'vendly_token';
 
-export const getToken  = () => localStorage.getItem(TOKEN_KEY);
-export const setToken  = (t) => t ? localStorage.setItem(TOKEN_KEY, t) : localStorage.removeItem(TOKEN_KEY);
+export const getToken = () => localStorage.getItem(TOKEN_KEY);
+export const setToken = (t) => t
+  ? localStorage.setItem(TOKEN_KEY, t)
+  : localStorage.removeItem(TOKEN_KEY);
 
 async function request(path, { method = 'GET', body, auth = true } = {}) {
   const headers = { 'Content-Type': 'application/json' };
-
   if (auth) {
     const token = getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -18,7 +19,7 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
 
   let res;
   try {
-    res = await fetch(`/api${path}`, {
+    res = await fetch(`${BASE}/api${path}`, {
       method,
       headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
@@ -35,8 +36,8 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
       data?.error ||
       (data?.errors && Object.values(data.errors)[0]) ||
       `Request failed (${res.status})`;
-    const err    = new Error(message);
-    err.status   = res.status;
+    const err = new Error(message);
+    err.status = res.status;
     err.fieldErrors = data?.errors || null;
     throw err;
   }
@@ -45,27 +46,27 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
 }
 
 export const api = {
-  // ── Auth ─────────────────────────────────────────────────
+  // Auth
   register : (body) => request('/auth/register', { method: 'POST', body, auth: false }),
   login    : (body) => request('/auth/login',    { method: 'POST', body, auth: false }),
   me       : ()     => request('/auth/me'),
 
-  // ── Shop profile ─────────────────────────────────────────
-  updateShop  : (body) => request('/shops/me',  { method: 'PATCH', body }),
-  getDiscover : ()     => request('/shops/discover', { auth: false }),
-  getShop     : (slug) => request(`/shops/${slug}`,  { auth: false }),
+  // Shop
+  updateShop  : (body) => request('/shops/me',         { method: 'PATCH', body }),
+  getDiscover : ()     => request('/shops/discover',    { auth: false }),
+  getShop     : (slug) => request(`/shops/${slug}`,     { auth: false }),
 
-  // ── Products ─────────────────────────────────────────────
-  listProducts   : ()           => request('/products'),
-  createProduct  : (body)       => request('/products',      { method: 'POST', body }),
-  updateProduct  : (id, body)   => request(`/products/${id}`, { method: 'PUT',  body }),
-  deleteProduct  : (id)         => request(`/products/${id}`, { method: 'DELETE' }),
+  // Products
+  listProducts  : ()         => request('/products'),
+  createProduct : (body)     => request('/products',       { method: 'POST', body }),
+  updateProduct : (id, body) => request(`/products/${id}`, { method: 'PUT',  body }),
+  deleteProduct : (id)       => request(`/products/${id}`, { method: 'DELETE' }),
 
-  // ── Orders ───────────────────────────────────────────────
-  placeOrder        : (body)         => request('/orders', { method: 'POST', body, auth: false }),
-  listOrders        : (status)       => request(`/orders${status ? `?status=${status}` : ''}`),
-  updateOrderStatus : (id, status)   => request(`/orders/${id}/status`, { method: 'PATCH', body: { status } }),
+  // Orders
+  placeOrder        : (body)       => request('/orders',                 { method: 'POST',  body, auth: false }),
+  listOrders        : (status)     => request(`/orders${status ? `?status=${status}` : ''}`),
+  updateOrderStatus : (id, status) => request(`/orders/${id}/status`,    { method: 'PATCH', body: { status } }),
 
-  // ── Analytics ────────────────────────────────────────────
-  getAnalytics : () => request('/analytics'),
+  // Analytics
+  getAnalytics: () => request('/analytics'),
 };
