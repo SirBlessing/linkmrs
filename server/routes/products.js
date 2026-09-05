@@ -4,13 +4,12 @@ import Product from '../models/Product.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
-const MAX_PRODUCTS = 10;
 
 function validate(body) {
   const errors = {};
-  if (!body.name?.trim())                                  errors.name        = 'Product name is required.';
-  if (!body.price || isNaN(+body.price) || +body.price <= 0) errors.price    = 'Price must be greater than 0.';
-  if (!body.description?.trim())                           errors.description = 'Description is required.';
+  if (!body.name?.trim())                                     errors.name        = 'Product name is required.';
+  if (!body.price || isNaN(+body.price) || +body.price <= 0) errors.price       = 'Price must be greater than 0.';
+  if (!body.description?.trim())                              errors.description = 'Description is required.';
   return errors;
 }
 
@@ -23,7 +22,13 @@ router.get('/', async (req, res) => {
     if (!shop) return res.status(404).json({ error: 'Shop not found.' });
 
     const products = await Product.find({ shopId: shop._id }).sort({ createdAt: -1 });
-    res.json({ products, count: products.length, limit: MAX_PRODUCTS });
+
+    // Check if premium has expired and downgrade if needed
+    const now = new Date();
+    const isPremium = shop.plan === 'premium' && shop.planExpiresAt && new Date(shop.planExpiresAt) > now;
+    const limit = isPremium ? shop.productLimit : 10;
+
+    res.json({ products, count: products.length, limit });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error.' });
@@ -36,11 +41,17 @@ router.post('/', async (req, res) => {
     const shop = await Shop.findOne({ userId: req.userId });
     if (!shop) return res.status(404).json({ error: 'Shop not found.' });
 
+    // Respect plan product limit
+    const now       = new Date();
+    const isPremium = shop.plan === 'premium' && shop.planExpiresAt && new Date(shop.planExpiresAt) > now;
+    const limit     = isPremium ? (shop.productLimit || 40) : 10;
+
     const count = await Product.countDocuments({ shopId: shop._id });
-    if (count >= MAX_PRODUCTS) {
-      return res.status(403).json({
-        error: `You've reached the ${MAX_PRODUCTS}-product limit on the Free plan.`,
-      });
+    if (count >= limit) {
+      const upgradeMsg = isPremium
+        ? `You've reached the ${limit}-product limit.`
+        : `You've reached the 10-product Free plan limit. Upgrade to Premium for up to 40 products.`;
+      return res.status(403).json({ error: upgradeMsg, showUpgrade: !isPremium });
     }
 
     const errors = validate(req.body || {});

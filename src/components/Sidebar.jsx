@@ -3,23 +3,26 @@ import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const NAV = [
-  { to: '/dashboard',            end: true, icon: 'dashboard',   label: 'Overview'  },
-  { to: '/dashboard/products',              icon: 'inventory_2',  label: 'Products'  },
+  { to: '/dashboard',            end: true, icon: 'dashboard',    label: 'Overview'  },
+  { to: '/dashboard/products',              icon: 'inventory_2',   label: 'Products'  },
   { to: '/dashboard/orders',                icon: 'shopping_cart', label: 'Orders'    },
-  { to: '/dashboard/analytics',             icon: 'bar_chart',    label: 'Analytics' },
-  { to: '/dashboard/settings',              icon: 'settings',     label: 'Settings'  },
+  { to: '/dashboard/analytics',             icon: 'bar_chart',     label: 'Analytics' },
+  { to: '/dashboard/settings',              icon: 'settings',      label: 'Settings'  },
 ];
 
 export default function Sidebar() {
   const { shop, logout } = useAuth();
   const navigate = useNavigate();
 
+  const now       = new Date();
+  const isPremium = shop?.plan === 'premium' && shop?.planExpiresAt && new Date(shop.planExpiresAt) > now;
+
   const handleLogout = () => { logout(); navigate('/'); };
 
   return (
     <aside className="sidebar">
       <div className="sidebar__brand">
-        <Link to="/" className="brand-mark">Vendly</Link>
+        <Link to="/" className="brand-mark">Linkmrs</Link>
         <p className="sidebar__shop-name">{shop?.shopName || 'Your Shop'}</p>
       </div>
 
@@ -37,6 +40,18 @@ export default function Sidebar() {
             {label}
           </NavLink>
         ))}
+
+        {/* Upgrade link — shows differently depending on plan */}
+        <NavLink
+          to="/dashboard/upgrade"
+          className={({ isActive }) =>
+            `sidebar__link sidebar__link--upgrade${isActive ? ' sidebar__link--active' : ''}`
+          }
+        >
+          <span className="material-symbols-outlined">workspace_premium</span>
+          {isPremium ? 'Premium ✓' : 'Upgrade'}
+          {!isPremium && <span className="sidebar__upgrade-badge">Free</span>}
+        </NavLink>
       </nav>
 
       <div className="sidebar__footer">

@@ -1,7 +1,4 @@
 // src/api/client.js
-// VITE_API_URL is set to your Render backend URL in production
-// In development it's empty so Vite's proxy handles /api/* → localhost:4000
-
 const BASE = import.meta.env.VITE_API_URL || 'https://linkmrs.onrender.com';
 const TOKEN_KEY = 'vendly_token';
 
@@ -37,8 +34,9 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
       (data?.errors && Object.values(data.errors)[0]) ||
       `Request failed (${res.status})`;
     const err = new Error(message);
-    err.status = res.status;
+    err.status      = res.status;
     err.fieldErrors = data?.errors || null;
+    err.showUpgrade = data?.showUpgrade || false;
     throw err;
   }
 
@@ -52,9 +50,9 @@ export const api = {
   me       : ()     => request('/auth/me'),
 
   // Shop
-  updateShop  : (body) => request('/shops/me',         { method: 'PATCH', body }),
-  getDiscover : ()     => request('/shops/discover',    { auth: false }),
-  getShop     : (slug) => request(`/shops/${slug}`,     { auth: false }),
+  updateShop  : (body) => request('/shops/me',       { method: 'PATCH', body }),
+  getDiscover : ()     => request('/shops/discover',  { auth: false }),
+  getShop     : (slug) => request(`/shops/${slug}`,   { auth: false }),
 
   // Products
   listProducts  : ()         => request('/products'),
@@ -63,10 +61,15 @@ export const api = {
   deleteProduct : (id)       => request(`/products/${id}`, { method: 'DELETE' }),
 
   // Orders
-  placeOrder        : (body)       => request('/orders',                 { method: 'POST',  body, auth: false }),
+  placeOrder        : (body)       => request('/orders',              { method: 'POST',  body, auth: false }),
   listOrders        : (status)     => request(`/orders${status ? `?status=${status}` : ''}`),
-  updateOrderStatus : (id, status) => request(`/orders/${id}/status`,    { method: 'PATCH', body: { status } }),
+  updateOrderStatus : (id, status) => request(`/orders/${id}/status`, { method: 'PATCH', body: { status } }),
 
   // Analytics
   getAnalytics: () => request('/analytics'),
+
+  // Payments / plan
+  getPlans      : ()    => request('/payments/plans', { auth: false }),
+  getPlanStatus : ()    => request('/payments/status'),
+  verifyPayment : (ref) => request('/payments/verify', { method: 'POST', body: { reference: ref } }),
 };
