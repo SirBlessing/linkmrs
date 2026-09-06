@@ -5,12 +5,23 @@ import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
 
+const FREE_LIMIT    = 5;
+const PREMIUM_LIMIT = 40;
+
 function validate(body) {
   const errors = {};
   if (!body.name?.trim())                                     errors.name        = 'Product name is required.';
   if (!body.price || isNaN(+body.price) || +body.price <= 0) errors.price       = 'Price must be greater than 0.';
   if (!body.description?.trim())                              errors.description = 'Description is required.';
   return errors;
+}
+
+function getPlanLimit(shop) {
+  const now       = new Date();
+  const isPremium = shop.plan === 'premium' &&
+                    shop.planExpiresAt &&
+                    new Date(shop.planExpiresAt) > now;
+  return isPremium ? PREMIUM_LIMIT : FREE_LIMIT;
 }
 
 router.use(requireAuth);
@@ -22,11 +33,7 @@ router.get('/', async (req, res) => {
     if (!shop) return res.status(404).json({ error: 'Shop not found.' });
 
     const products = await Product.find({ shopId: shop._id }).sort({ createdAt: -1 });
-
-    // Check if premium has expired and downgrade if needed
-    const now = new Date();
-    const isPremium = shop.plan === 'premium' && shop.planExpiresAt && new Date(shop.planExpiresAt) > now;
-    const limit = isPremium ? shop.productLimit : 10;
+    const limit    = getPlanLimit(shop);
 
     res.json({ products, count: products.length, limit });
   } catch (err) {
@@ -41,17 +48,17 @@ router.post('/', async (req, res) => {
     const shop = await Shop.findOne({ userId: req.userId });
     if (!shop) return res.status(404).json({ error: 'Shop not found.' });
 
-    // Respect plan product limit
-    const now       = new Date();
-    const isPremium = shop.plan === 'premium' && shop.planExpiresAt && new Date(shop.planExpiresAt) > now;
-    const limit     = isPremium ? (shop.productLimit || 40) : 10;
-
+    const limit = getPlanLimit(shop);
     const count = await Product.countDocuments({ shopId: shop._id });
+
     if (count >= limit) {
-      const upgradeMsg = isPremium
-        ? `You've reached the ${limit}-product limit.`
-        : `You've reached the 10-product Free plan limit. Upgrade to Premium for up to 40 products.`;
-      return res.status(403).json({ error: upgradeMsg, showUpgrade: !isPremium });
+      const isPremium = limit === PREMIUM_LIMIT;
+      return res.status(403).json({
+        error: isPremium
+          ? `You've reached the ${PREMIUM_LIMIT}-product Premium limit.`
+          : `You've reached the ${FREE_LIMIT}-product Free limit. Upgrade to Premium to add up to ${PREMIUM_LIMIT} products.`,
+        showUpgrade: !isPremium,
+      });
     }
 
     const errors = validate(req.body || {});

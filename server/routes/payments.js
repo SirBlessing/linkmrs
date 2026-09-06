@@ -5,21 +5,18 @@ import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
 
+const PREMIUM_PRICE         = 2000;  // ₦2,000
 const PREMIUM_PRODUCT_LIMIT = 40;
 const PLAN_DURATION_DAYS    = 30;
 
-// Helper — call Paystack verify endpoint
 function paystackVerify(reference) {
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'api.paystack.co',
       path:     `/transaction/verify/${encodeURIComponent(reference)}`,
       method:   'GET',
-      headers: {
-        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-      },
+      headers:  { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
     };
-
     const req = https.request(options, (res) => {
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
@@ -28,87 +25,71 @@ function paystackVerify(reference) {
         catch (e) { reject(e); }
       });
     });
-
     req.on('error', reject);
     req.end();
   });
 }
 
-// GET /api/payments/plans  (public — return plan details + pricing)
+// GET /api/payments/plans  (public)
 router.get('/plans', (_req, res) => {
   res.json({
     free: {
-      name:         'Free',
-      price:        0,
-      currency:     '₦',
-      productLimit: 10,
+      name: 'Free', price: 0, currency: '₦',
+      productLimit: 5,
       features: [
+        'Up to 5 products',
         'Single Linkmrs storefront link',
-        'Up to 10 products',
         'WhatsApp checkout',
         'Order management',
         'Basic analytics',
-        'Listed on Discover',
       ],
     },
     premium: {
-      name:         'Premium',
-      price:        5000,       // ₦5,000 — change this to whatever you want
-      currency:     '₦',
+      name: 'Premium', price: PREMIUM_PRICE, currency: '₦',
       productLimit: PREMIUM_PRODUCT_LIMIT,
       durationDays: PLAN_DURATION_DAYS,
       features: [
-        'Everything in Free',
         'Up to 40 products',
+        'Everything in Free',
         'Priority listing on Discover',
         'Premium badge on storefront',
-        'Full analytics suite',
+        'Full analytics',
         'Priority support',
       ],
     },
   });
 });
 
-// POST /api/payments/verify  (protected — verify Paystack payment + upgrade shop)
+// POST /api/payments/verify  (protected)
 router.post('/verify', requireAuth, async (req, res) => {
   try {
     const { reference } = req.body || {};
-    if (!reference)
-      return res.status(400).json({ error: 'Payment reference is required.' });
+    if (!reference) return res.status(400).json({ error: 'Payment reference is required.' });
 
-    // Verify with Paystack
     const paystackRes = await paystackVerify(reference);
-
     if (!paystackRes.status || paystackRes.data?.status !== 'success') {
       return res.status(400).json({ error: 'Payment not successful. Please try again.' });
     }
 
-    // Find the vendor's shop
     const shop = await Shop.findOne({ userId: req.userId });
     if (!shop) return res.status(404).json({ error: 'Shop not found.' });
 
-    // Calculate expiry — if already premium and not expired, extend from current expiry
     const now        = new Date();
     const currentExp = shop.planExpiresAt && new Date(shop.planExpiresAt) > now
-      ? new Date(shop.planExpiresAt)
-      : now;
+      ? new Date(shop.planExpiresAt) : now;
 
     const planExpiresAt = new Date(currentExp);
     planExpiresAt.setDate(planExpiresAt.getDate() + PLAN_DURATION_DAYS);
 
     const updated = await Shop.findByIdAndUpdate(
       shop._id,
-      {
-        plan:         'premium',
-        planExpiresAt,
-        productLimit: PREMIUM_PRODUCT_LIMIT,
-      },
+      { plan: 'premium', planExpiresAt, productLimit: PREMIUM_PRODUCT_LIMIT },
       { new: true }
     );
 
     res.json({
       message: `Shop upgraded to Premium until ${planExpiresAt.toDateString()}.`,
-      shop:    updated,
+      shop: updated,
     });
   } catch (err) {
     console.error('Payment verify error:', err);
@@ -116,26 +97,24 @@ router.post('/verify', requireAuth, async (req, res) => {
   }
 });
 
-// GET /api/payments/status  (protected — check current plan status)
+// GET /api/payments/status  (protected)
 router.get('/status', requireAuth, async (req, res) => {
   try {
     const shop = await Shop.findOne({ userId: req.userId });
     if (!shop) return res.status(404).json({ error: 'Shop not found.' });
 
     const now       = new Date();
-    const isPremium = shop.plan === 'premium' && shop.planExpiresAt && new Date(shop.planExpiresAt) > now;
+    const isPremium = shop.plan === 'premium' &&
+                      shop.planExpiresAt &&
+                      new Date(shop.planExpiresAt) > now;
 
-    // Auto-downgrade if premium has expired
     if (shop.plan === 'premium' && !isPremium) {
-      await Shop.findByIdAndUpdate(shop._id, {
-        plan:        'free',
-        productLimit: 10,
-      });
+      await Shop.findByIdAndUpdate(shop._id, { plan: 'free', productLimit: 5 });
     }
 
     res.json({
       plan:          isPremium ? 'premium' : 'free',
-      productLimit:  isPremium ? PREMIUM_PRODUCT_LIMIT : 10,
+      productLimit:  isPremium ? PREMIUM_PRODUCT_LIMIT : 5,
       isPremium,
       planExpiresAt: shop.planExpiresAt,
       daysRemaining: isPremium

@@ -14,7 +14,7 @@ import StorefrontPage   from './pages/StorefrontPage.jsx';
 import LoginPage        from './pages/LoginPage.jsx';
 import RegisterPage     from './pages/RegisterPage.jsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
-import FaqPage          from './pages/FaqPage.jsx';
+// import FaqPage          from './pages/FaqPage.jsx';
 import HowItWorksPage   from './pages/HowItWorksPage.jsx';
 import NotFoundPage     from './pages/NotFoundPage.jsx';
 
@@ -37,7 +37,7 @@ export default function App() {
       <Route path="/contact"           element={<ContactPage />} />
       <Route path="/terms"             element={<TermsPage />} />
       <Route path="/privacy"           element={<PrivacyPage />} />
-      <Route path="/faq"               element={<FaqPage />} />
+      {/* <Route path="/faq"               element={<FaqPage />} /> */}
       <Route path="/how-it-works"      element={<HowItWorksPage />} />
       <Route path="/shop/:slug"        element={<StorefrontPage />} />
       <Route path="/login"             element={<LoginPage />} />

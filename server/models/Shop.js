@@ -11,15 +11,13 @@ const shopSchema = new mongoose.Schema(
     whatsappNumber: { type: String, default: '' },
     logo:           { type: String, default: '' },
 
-    // ── Plan / subscription ─────────────────────────────────
     plan:          { type: String, enum: ['free', 'premium'], default: 'free' },
-    planExpiresAt: { type: Date, default: null },
-    productLimit:  { type: Number, default: 10 },
+    planExpiresAt: { type: Date,   default: null },
+    productLimit:  { type: Number, default: 5 },   // free = 5, premium = 40
   },
   { timestamps: true }
 );
 
-// Helper virtual — is premium currently active?
 shopSchema.virtual('isPremium').get(function () {
   return (
     this.plan === 'premium' &&
