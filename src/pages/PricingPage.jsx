@@ -4,14 +4,14 @@ import Navbar from '../components/Navbar.jsx';
 import Footer from '../components/Footer.jsx';
 
 const FREE_FEATURES = [
-  { icon: 'check_circle', text: 'One Vendly storefront link' },
+  { icon: 'check_circle', text: 'One Linkmrs storefront link' },
   { icon: 'check_circle', text: 'Up to 10 products' },
   { icon: 'check_circle', text: 'WhatsApp checkout' },
   { icon: 'check_circle', text: 'Order management dashboard' },
   { icon: 'check_circle', text: 'Basic analytics' },
   { icon: 'check_circle', text: 'Listed on Discover' },
   { icon: 'block',        text: 'Custom domain', muted: true },
-  { icon: 'block',        text: 'Remove Vendly branding', muted: true },
+  { icon: 'block',        text: 'Remove Linkmrs branding', muted: true },
   { icon: 'block',        text: 'Unlimited products', muted: true },
 ];
 
@@ -19,7 +19,7 @@ const PRO_FEATURES = [
   { icon: 'check_circle', text: 'Everything in Free' },
   { icon: 'check_circle', text: 'Unlimited products' },
   { icon: 'check_circle', text: 'Custom domain (.shop)' },
-  { icon: 'check_circle', text: 'Remove Vendly branding' },
+  { icon: 'check_circle', text: 'Remove Linkmrs branding' },
   { icon: 'check_circle', text: 'Full analytics suite' },
   { icon: 'check_circle', text: 'Priority support' },
   { icon: 'check_circle', text: 'Featured placement on Discover' },
@@ -36,7 +36,7 @@ const FAQS = [
   },
   {
     q: 'Can customers pay online?',
-    a: 'Vendly routes orders through WhatsApp. You handle payment however you and your customer prefer — bank transfer, cash on delivery, mobile money — keeping things flexible for every market.'
+    a: 'Linkmrs routes orders through WhatsApp. You handle payment however you and your customer prefer — bank transfer, cash on delivery, mobile money — keeping things flexible for every market.'
   },
   {
     q: 'Can I change my shop name?',

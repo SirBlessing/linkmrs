@@ -1,4 +1,4 @@
-# Vendly — React Frontend Prototype
+# Linkmrs — React Frontend Prototype
 
 A fully functional micro-vendor platform prototype, built to match the
 attached "Kinetic Minimalist" design system exactly.
@@ -33,7 +33,7 @@ simulated experiences via the pill switcher fixed to the top of the screen:
   source design's "8 of 10 slots used" indicator.
 - Product list with inline **Edit** / **Delete** actions.
 - Editable shop profile card (logo, name, bio, location, currency symbol,
-  WhatsApp number) with a generated store link (`vendly.com/your-shop-name`)
+  WhatsApp number) with a generated store link (`Linkmrs.com/your-shop-name`)
   and a one-tap **Copy Link** button.
 - **Desktop (≥1024px):** replicates the three-column split layout — fixed
   280px sidebar, scrollable main workspace, and a 360px live phone preview

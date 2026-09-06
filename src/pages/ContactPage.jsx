@@ -47,7 +47,7 @@ export default function ContactPage() {
                   <span className="material-symbols-outlined">mail</span>
                   <div>
                     <strong>Email</strong>
-                    <p>hello@vendly.com</p>
+                    <p>hello@Linkmrs.com</p>
                   </div>
                 </div>
                 <div className="contact-channel">

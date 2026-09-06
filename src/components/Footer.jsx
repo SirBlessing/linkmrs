@@ -7,7 +7,7 @@ export default function Footer() {
     <footer className="footer">
       <div className="footer__inner">
         <div className="footer__brand">
-          <Link to="/" className="brand-mark">Vendly</Link>
+          <Link to="/" className="brand-mark">Linkmrs</Link>
           <p className="footer__tagline">
             Your shop, in one link. Built for micro-vendors everywhere.
           </p>
@@ -36,7 +36,7 @@ export default function Footer() {
       </div>
 
       <div className="footer__bottom">
-        <p>&copy; {year} Vendly. All rights reserved.</p>
+        <p>&copy; {year} Linkmrs. All rights reserved.</p>
       </div>
     </footer>
   );

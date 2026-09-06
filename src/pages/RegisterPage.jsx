@@ -56,7 +56,7 @@ export default function RegisterPage() {
             required
             autoComplete="organization"
           />
-          <p className="field__hint">This becomes your storefront URL: vendly.com/bloom-studio</p>
+          <p className="field__hint">This becomes your storefront URL: Linkmrs.com/bloom-studio</p>
         </div>
 
         <div className="field">

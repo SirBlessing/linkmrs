@@ -18,7 +18,7 @@ export default function PrivacyPage() {
           </section>
           <section className="static-section">
             <h2>How we use your data</h2>
-            <p>We use your data solely to operate the Vendly service — authenticating your account, displaying your storefront, routing orders, and generating your analytics. We do not sell, rent, or share your personal data with third parties for marketing purposes.</p>
+            <p>We use your data solely to operate the Linkmrs service — authenticating your account, displaying your storefront, routing orders, and generating your analytics. We do not sell, rent, or share your personal data with third parties for marketing purposes.</p>
           </section>
           <section className="static-section">
             <h2>Data storage and security</h2>
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
           </section>
           <section className="static-section">
             <h2>Cookies and local storage</h2>
-            <p>Vendly stores your authentication token in your browser's local storage to keep you logged in. We do not use tracking cookies or third-party analytics services.</p>
+            <p>Linkmrs stores your authentication token in your browser's local storage to keep you logged in. We do not use tracking cookies or third-party analytics services.</p>
           </section>
           <section className="static-section">
             <h2>Customer data (orders)</h2>
@@ -34,7 +34,7 @@ export default function PrivacyPage() {
           </section>
           <section className="static-section">
             <h2>Your rights</h2>
-            <p>You may request deletion of your account and all associated data at any time by contacting us at <a href="mailto:privacy@vendly.com">privacy@vendly.com</a>. We will process deletion requests within 30 days.</p>
+            <p>You may request deletion of your account and all associated data at any time by contacting us at <a href="mailto:privacy@Linkmrs.com">privacy@Linkmrs.com</a>. We will process deletion requests within 30 days.</p>
           </section>
           <section className="static-section">
             <h2>Changes to this policy</h2>
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
           </section>
           <section className="static-section">
             <h2>Contact</h2>
-            <p>Privacy concerns? Reach us at <a href="mailto:privacy@vendly.com">privacy@vendly.com</a>.</p>
+            <p>Privacy concerns? Reach us at <a href="mailto:privacy@Linkmrs.com">privacy@Linkmrs.com</a>.</p>
           </section>
         </div>
       </main>

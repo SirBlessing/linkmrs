@@ -3,7 +3,7 @@
 // In development it's empty so Vite's proxy handles /api/* → localhost:4000
 
 const BASE = import.meta.env.VITE_API_URL || 'https://linkmrs.onrender.com';
-const TOKEN_KEY = 'vendly_token';
+const TOKEN_KEY = 'Linkmrs_token';
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (t) => t

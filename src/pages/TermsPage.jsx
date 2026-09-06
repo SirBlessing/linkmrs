@@ -14,11 +14,11 @@ export default function TermsPage() {
         <div className="static-page__body static-page__body--narrow static-page__body--legal">
           <section className="static-section">
             <h2>1. Acceptance of Terms</h2>
-            <p>By creating a Vendly account or using the Vendly platform ("Service"), you agree to these Terms of Service. If you do not agree, do not use the Service.</p>
+            <p>By creating a Linkmrs account or using the Linkmrs platform ("Service"), you agree to these Terms of Service. If you do not agree, do not use the Service.</p>
           </section>
           <section className="static-section">
             <h2>2. Description of Service</h2>
-            <p>Vendly provides micro-vendors with a hosted storefront page, order management tools, and analytics. The Service facilitates order communication via WhatsApp but does not process payments.</p>
+            <p>Linkmrs provides micro-vendors with a hosted storefront page, order management tools, and analytics. The Service facilitates order communication via WhatsApp but does not process payments.</p>
           </section>
           <section className="static-section">
             <h2>3. Accounts and Registration</h2>
@@ -26,27 +26,27 @@ export default function TermsPage() {
           </section>
           <section className="static-section">
             <h2>4. Acceptable Use</h2>
-            <p>You agree not to use the Service to sell counterfeit goods, illegal items, or anything that violates applicable law. Vendly reserves the right to suspend or terminate accounts that violate this policy without notice.</p>
+            <p>You agree not to use the Service to sell counterfeit goods, illegal items, or anything that violates applicable law. Linkmrs reserves the right to suspend or terminate accounts that violate this policy without notice.</p>
           </section>
           <section className="static-section">
             <h2>5. Product Listings</h2>
-            <p>You are solely responsible for the accuracy of product descriptions, pricing, and images you upload. Vendly does not verify product listings and accepts no liability for disputes between vendors and customers.</p>
+            <p>You are solely responsible for the accuracy of product descriptions, pricing, and images you upload. Linkmrs does not verify product listings and accepts no liability for disputes between vendors and customers.</p>
           </section>
           <section className="static-section">
             <h2>6. Free Plan Limitations</h2>
-            <p>Free accounts are limited to 10 active products. Vendly reserves the right to modify plan limits with reasonable notice to users.</p>
+            <p>Free accounts are limited to 10 active products. Linkmrs reserves the right to modify plan limits with reasonable notice to users.</p>
           </section>
           <section className="static-section">
             <h2>7. Intellectual Property</h2>
-            <p>You retain ownership of all content you upload. By uploading content, you grant Vendly a non-exclusive licence to display that content on the platform. Vendly's own branding, code, and design remain our intellectual property.</p>
+            <p>You retain ownership of all content you upload. By uploading content, you grant Linkmrs a non-exclusive licence to display that content on the platform. Linkmrs's own branding, code, and design remain our intellectual property.</p>
           </section>
           <section className="static-section">
             <h2>8. Disclaimer of Warranties</h2>
-            <p>The Service is provided "as is" without warranties of any kind. Vendly does not guarantee uptime, accuracy of analytics, or uninterrupted access.</p>
+            <p>The Service is provided "as is" without warranties of any kind. Linkmrs does not guarantee uptime, accuracy of analytics, or uninterrupted access.</p>
           </section>
           <section className="static-section">
             <h2>9. Limitation of Liability</h2>
-            <p>To the maximum extent permitted by law, Vendly shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Service.</p>
+            <p>To the maximum extent permitted by law, Linkmrs shall not be liable for any indirect, incidental, or consequential damages arising from your use of the Service.</p>
           </section>
           <section className="static-section">
             <h2>10. Changes to Terms</h2>
@@ -54,7 +54,7 @@ export default function TermsPage() {
           </section>
           <section className="static-section">
             <h2>11. Contact</h2>
-            <p>Questions about these terms? Email us at <a href="mailto:legal@vendly.com">legal@vendly.com</a>.</p>
+            <p>Questions about these terms? Email us at <a href="mailto:legal@Linkmrs.com">legal@Linkmrs.com</a>.</p>
           </section>
         </div>
       </main>

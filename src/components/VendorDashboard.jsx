@@ -82,7 +82,7 @@ export default function VendorDashboard({
       {/* Desktop sidebar */}
       <aside className="dashboard__sidebar">
         <div className="dashboard__sidebar-brand">
-          <h1 className="brand-mark">Vendly</h1>
+          <h1 className="brand-mark">Linkmrs</h1>
           <p className="dashboard__sidebar-tagline">Global Micro-Vendor</p>
         </div>
 

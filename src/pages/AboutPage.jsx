@@ -10,7 +10,7 @@ export default function AboutPage() {
 
       <main className="static-page">
         <div className="static-page__hero">
-          <h1 className="heading-lg">About Vendly</h1>
+          <h1 className="heading-lg">About Linkmrs</h1>
           <p>We built the storefront tool we wished existed when we were starting out.</p>
         </div>
 
@@ -18,7 +18,7 @@ export default function AboutPage() {
           <section className="static-section">
             <h2 className="heading-md">Our mission</h2>
             <p>
-              Vendly exists to give micro-entrepreneurs — the seamstress in Lagos, the
+              Linkmrs exists to give micro-entrepreneurs — the seamstress in Lagos, the
               ceramics maker in London, the coffee roaster in Nairobi — the same
               commerce infrastructure that large brands take for granted. A clean
               storefront, structured orders, and real analytics. No bloated SaaS
@@ -33,7 +33,7 @@ export default function AboutPage() {
                 <div className="step__number">1</div>
                 <div>
                   <h3>Create your shop</h3>
-                  <p>Register in 60 seconds. You get a unique link instantly — <strong>vendly.com/your-shop-name</strong>.</p>
+                  <p>Register in 60 seconds. You get a unique link instantly — <strong>Linkmrs.com/your-shop-name</strong>.</p>
                 </div>
               </div>
               <div className="step">
@@ -57,7 +57,7 @@ export default function AboutPage() {
             <h2 className="heading-md">Why WhatsApp checkout?</h2>
             <p>
               For most micro-vendors, WhatsApp is already where business happens. Customers
-              message you, you confirm stock, you arrange delivery. Vendly doesn't break that
+              message you, you confirm stock, you arrange delivery. Linkmrs doesn't break that
               flow — it makes it structured. Every order arrives as a clean, itemised message
               with customer details and a total. No payment gateway friction, no abandoned
               carts on complicated checkout pages.

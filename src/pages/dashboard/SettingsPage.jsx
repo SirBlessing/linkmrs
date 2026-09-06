@@ -81,7 +81,7 @@ export default function SettingsPage() {
       <div className="dashboard__card dashboard__link-card">
         <div className="dashboard__link-info">
           <p className="field__label">Your storefront link (permanent)</p>
-          <p className="dashboard__link-url">vendly.com/{shop.slug}</p>
+          <p className="dashboard__link-url">Linkmrs.com/{shop.slug}</p>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
           <button

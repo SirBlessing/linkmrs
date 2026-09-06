@@ -61,7 +61,7 @@ export default function StorefrontPage() {
     customerName  ? `From: ${customerName}`   : null,
     customerPhone ? `Phone: ${customerPhone}` : null,
     '',
-    'Sent via Vendly',
+    'Sent via Linkmrs',
   ].filter((l) => l !== null).join('\n');
 
   const handleCheckout = async () => {
@@ -105,7 +105,7 @@ export default function StorefrontPage() {
       <div className="status-page">
         <span className="material-symbols-outlined status-page__icon">storefront</span>
         <h1 className="heading-lg">Shop not found</h1>
-        <p className="status-page__text">{loadError || `No shop at vendly.com/${slug}`}</p>
+        <p className="status-page__text">{loadError || `No shop at Linkmrs.com/${slug}`}</p>
         <div className="status-page__actions">
           <Link to="/discover" className="btn btn--primary">Browse other shops</Link>
           <Link to="/" className="btn btn--ghost">Home</Link>
@@ -118,7 +118,7 @@ export default function StorefrontPage() {
     <div className="storefront">
       {/* Minimal top bar */}
       <header className="storefront__topbar">
-        <Link to="/" className="brand-mark">Vendly</Link>
+        <Link to="/" className="brand-mark">Linkmrs</Link>
         <Link to="/discover" className="text-btn">
           <span className="material-symbols-outlined">explore</span>
           Discover

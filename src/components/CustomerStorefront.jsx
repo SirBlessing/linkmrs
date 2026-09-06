@@ -48,7 +48,7 @@ export default function CustomerStorefront({
       '',
       `Total: ${formatPrice(totalPrice, currency)}`,
       '',
-      'Sent via Vendly'
+      'Sent via Linkmrs'
     ].join('\n');
   };
 
@@ -72,7 +72,7 @@ export default function CustomerStorefront({
     <div className={`storefront ${embedded ? 'storefront--embedded' : ''}`}>
       {!embedded && (
         <header className="storefront__topbar">
-          <span className="brand-mark">Vendly</span>
+          <span className="brand-mark">Linkmrs</span>
           <div className="storefront__topbar-actions">
             <button type="button" className="icon-btn" aria-label="Notifications">
               <span className="material-symbols-outlined">notifications</span>

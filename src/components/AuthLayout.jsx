@@ -6,7 +6,7 @@ export default function AuthLayout({ title, subtitle, children }) {
     <div className="auth-layout">
       {/* Left side — brand panel (desktop only) */}
       <aside className="auth-layout__brand">
-        <Link to="/" className="auth-layout__brand-logo">Vendly</Link>
+        <Link to="/" className="auth-layout__brand-logo">Linkmrs</Link>
         <div className="auth-layout__brand-copy">
           <h1>Empowering the next generation of commerce.</h1>
           <p>
@@ -32,7 +32,7 @@ export default function AuthLayout({ title, subtitle, children }) {
 
       {/* Right side — form panel */}
       <section className="auth-layout__panel">
-        <Link to="/" className="auth-layout__mobile-brand">Vendly</Link>
+        <Link to="/" className="auth-layout__mobile-brand">Linkmrs</Link>
 
         <div className="auth-card">
           {/* Tab switcher */}

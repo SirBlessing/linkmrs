@@ -18,7 +18,7 @@ export default function DashboardLayout() {
       <div className="dashboard-shell__body">
         {/* Mobile top bar */}
         <header className="dashboard-topbar">
-          <span className="brand-mark">Vendly</span>
+          <span className="brand-mark">Linkmrs</span>
           <div className="dashboard-topbar__actions">
             {shop && (
               <Link
