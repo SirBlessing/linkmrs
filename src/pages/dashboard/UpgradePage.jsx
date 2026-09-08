@@ -10,14 +10,14 @@ const PLAN_DAYS        = 30;
 export default function UpgradePage() {
   const { user, shop, updateShop } = useAuth();
 
-  const [status,         setStatus]         = useState(null);
-  const [loading,        setLoading]         = useState(true);
-  const [paying,         setPaying]          = useState(false);
-  const [paystackReady,  setPaystackReady]   = useState(false);
-  const [error,          setError]           = useState('');
-  const [success,        setSuccess]         = useState('');
+  const [status,        setStatus]       = useState(null);
+  const [loading,       setLoading]      = useState(true);
+  const [paying,        setPaying]       = useState(false);
+  const [paystackReady, setPaystackReady] = useState(false);
+  const [error,         setError]        = useState('');
+  const [success,       setSuccess]      = useState('');
 
-  // Load current plan status
+  // Load current plan status from backend
   useEffect(() => {
     api.getPlanStatus()
       .then(setStatus)
@@ -25,7 +25,8 @@ export default function UpgradePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Make sure Paystack script is loaded — check every 300ms for up to 10s
+  // Wait for Paystack inline script to load
+  // Checks every 300ms — falls back to injecting the script if not found after 5s
   useEffect(() => {
     if (window.PaystackPop) { setPaystackReady(true); return; }
 
@@ -35,12 +36,13 @@ export default function UpgradePage() {
       if (window.PaystackPop) {
         setPaystackReady(true);
         clearInterval(interval);
-      } else if (tries > 33) {
-        // Still not loaded after 10s — inject the script dynamically as fallback
+      } else if (tries > 16) {
+        // Fallback: inject script dynamically
         const script = document.createElement('script');
         script.src = 'https://js.paystack.co/v1/inline.js';
-        script.onload = () => setPaystackReady(true);
-        script.onerror = () => setError('Paystack could not be loaded. Please refresh the page and try again.');
+        script.onload  = () => setPaystackReady(true);
+        script.onerror = () =>
+          setError('Paystack could not be loaded. Please refresh and try again.');
         document.head.appendChild(script);
         clearInterval(interval);
       }
@@ -51,53 +53,55 @@ export default function UpgradePage() {
 
   const handleUpgrade = () => {
     if (!paystackReady || !window.PaystackPop) {
-      setError('Paystack is still loading. Please wait a moment and try again.');
+      setError('Payment system still loading. Please wait a moment and try again.');
       return;
     }
 
     const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
     if (!publicKey) {
-      setError('Paystack public key is not configured. Please contact support.');
+      setError('Paystack public key is not set. Contact support.');
       return;
     }
 
     setPaying(true);
     setError('');
 
-    const handler = window.PaystackPop.setup({
-      key:      publicKey,
-      email:    user?.email,
-      amount:   PREMIUM_PRICE * 100,  // convert to kobo
-      currency: 'NGN',
-      ref:      `linkmrs_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      metadata: {
-        custom_fields: [
-          { display_name: 'Shop Name', variable_name: 'shop_name', value: shop?.shopName || '' },
-        ],
-      },
-      onClose: () => {
-        setPaying(false);
-      },
-      callback: async (response) => {
-        try {
-          const data = await api.verifyPayment(response.reference);
-          setSuccess(data.message || 'Upgrade successful! You can now add up to 40 products.');
+    // IMPORTANT: callback must be a plain function, NOT async
+    // Paystack validates this and rejects async functions
+    function onPaymentSuccess(response) {
+      api
+        .verifyPayment(response.reference)
+        .then((data) => {
+          setSuccess(
+            data.message || 'Upgrade successful! You can now add up to 40 products.'
+          );
           setStatus((prev) => ({
             ...prev,
-            plan: 'premium',
-            isPremium: true,
-            productLimit: PREMIUM_PRODUCTS,
+            plan:          'premium',
+            isPremium:     true,
+            productLimit:  PREMIUM_PRODUCTS,
             daysRemaining: PLAN_DAYS,
           }));
-          await updateShop({});
-        } catch (err) {
+          return updateShop({});
+        })
+        .catch(() => {
           setError(
             `Payment received but verification failed. Contact support with reference: ${response.reference}`
           );
-        } finally {
-          setPaying(false);
-        }
+        })
+        .finally(() => setPaying(false));
+    }
+
+    const handler = window.PaystackPop.setup({
+      key:      publicKey,
+      email:    user?.email,
+      amount:   PREMIUM_PRICE * 100,  // Paystack uses kobo
+      currency: 'NGN',
+      ref:      `linkmrs_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      onClose: function () {
+        setPaying(false);
       },
+      callback: onPaymentSuccess,
     });
 
     handler.openIframe();
@@ -131,10 +135,11 @@ export default function UpgradePage() {
         <div className="page__loading"><span className="spinner" /></div>
       ) : (
         <>
-          {/* Active premium notice */}
           {isPremium && (
             <div className="upgrade-active">
-              <span className="material-symbols-outlined upgrade-active__icon">workspace_premium</span>
+              <span className="material-symbols-outlined upgrade-active__icon">
+                workspace_premium
+              </span>
               <div>
                 <h2 className="heading-md">You're on Premium</h2>
                 <p>
@@ -143,8 +148,8 @@ export default function UpgradePage() {
                     {new Date(status.planExpiresAt).toLocaleDateString(undefined, {
                       day: 'numeric', month: 'long', year: 'numeric',
                     })}
-                  </strong>
-                  {' '}({status.daysRemaining} day{status.daysRemaining !== 1 ? 's' : ''} left).
+                  </strong>{' '}
+                  ({status.daysRemaining} day{status.daysRemaining !== 1 ? 's' : ''} left).
                 </p>
                 <p style={{ color: 'var(--c-muted)', marginTop: '0.25rem', fontSize: '0.875rem' }}>
                   Renewing early extends from your current expiry — you won't lose any days.
@@ -153,13 +158,13 @@ export default function UpgradePage() {
             </div>
           )}
 
-          {/* Plan cards */}
           <div className="upgrade-grid">
-
-            {/* Free */}
+            {/* Free plan card */}
             <div className={`upgrade-card ${!isPremium ? 'upgrade-card--current' : ''}`}>
               {!isPremium && (
-                <span className="upgrade-card__badge upgrade-card__badge--current">Current Plan</span>
+                <span className="upgrade-card__badge upgrade-card__badge--current">
+                  Current Plan
+                </span>
               )}
               <div className="upgrade-card__header">
                 <h2 className="upgrade-card__tier">Free</h2>
@@ -181,7 +186,7 @@ export default function UpgradePage() {
               </button>
             </div>
 
-            {/* Premium */}
+            {/* Premium plan card */}
             <div className={`upgrade-card upgrade-card--premium ${isPremium ? 'upgrade-card--current' : ''}`}>
               {isPremium
                 ? <span className="upgrade-card__badge upgrade-card__badge--current">Current Plan</span>
@@ -203,7 +208,7 @@ export default function UpgradePage() {
                 <li><span className="material-symbols-outlined">check_circle</span>Priority support</li>
               </ul>
 
-              {/* THE UPGRADE BUTTON — bright amber so it pops on dark background */}
+              {/* Bright amber button — high contrast on dark card */}
               <button
                 type="button"
                 className="upgrade-pay-btn"
@@ -212,24 +217,17 @@ export default function UpgradePage() {
               >
                 {paying ? (
                   <>
-                    <span className="spinner" style={{ width: '1.25rem', height: '1.25rem', borderTopColor: '#003434' }} />
-                    Opening payment…
+                    <span className="spinner" style={{ width: '1.1rem', height: '1.1rem', borderWidth: '2px', borderTopColor: '#3a2c00' }} />
+                    Processing…
                   </>
+                ) : !paystackReady ? (
+                  'Loading payment system…'
+                ) : isPremium ? (
+                  <><span className="material-symbols-outlined">workspace_premium</span>Renew Premium — ₦{PREMIUM_PRICE.toLocaleString()}</>
                 ) : (
-                  <>
-                    <span className="material-symbols-outlined">workspace_premium</span>
-                    {isPremium
-                      ? `Renew Premium — ₦${PREMIUM_PRICE.toLocaleString()}`
-                      : `Upgrade Now — ₦${PREMIUM_PRICE.toLocaleString()}`}
-                  </>
+                  <><span className="material-symbols-outlined">workspace_premium</span>Upgrade Now — ₦{PREMIUM_PRICE.toLocaleString()}</>
                 )}
               </button>
-
-              {!paystackReady && !paying && (
-                <p className="upgrade-card__note" style={{ color: 'rgba(255,255,255,.5)' }}>
-                  Loading payment system…
-                </p>
-              )}
 
               <p className="upgrade-card__note">
                 Secure payment via Paystack · Card, bank transfer &amp; USSD accepted

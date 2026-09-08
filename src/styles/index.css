@@ -1170,3 +1170,44 @@ input,textarea,select { font-family: inherit; font-size: inherit; color: inherit
   font-size: 1.25rem;
   font-variation-settings: 'FILL' 1;
 }
+
+
+
+/* ── Paste this at the bottom of src/styles/index.css ────── */
+
+/* Bright amber upgrade button — visible on dark premium card */
+.upgrade-pay-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border-radius: var(--r-lg);
+  background: #ffbf00;          /* bright amber — high contrast on dark card */
+  color: #3a2c00;               /* dark text on amber */
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  box-shadow: 0 4px 16px rgba(255, 191, 0, 0.4);
+}
+.upgrade-pay-btn:hover {
+  background: #ffd23f;
+  box-shadow: 0 6px 20px rgba(255, 191, 0, 0.55);
+}
+.upgrade-pay-btn:active {
+  transform: scale(0.97);
+}
+.upgrade-pay-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+.upgrade-pay-btn .material-symbols-outlined {
+  font-size: 1.25rem;
+  font-variation-settings: 'FILL' 1;
+}
