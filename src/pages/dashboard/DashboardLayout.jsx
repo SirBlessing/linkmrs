@@ -1,14 +1,35 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
-import Sidebar  from '../../components/Sidebar.jsx';
+import Sidebar   from '../../components/Sidebar.jsx';
 import BottomNav from '../../components/BottomNav.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
+import { api } from '../../api/client.js';
 
 export default function DashboardLayout() {
-  const { shop, logout } = useAuth();
+  const { shop, logout, updateShop } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => { logout(); navigate('/'); };
+  // Every time the dashboard loads, check the plan status.
+  // The backend auto-demotes expired premium accounts when this endpoint is called.
+  // This means if a user's premium expired overnight, they are downgraded
+  // the next time they open the dashboard — no manual intervention needed.
+  useEffect(() => {
+    api.getPlanStatus()
+      .then((status) => {
+        // If backend downgraded the plan, refresh shop state in AuthContext
+        if (shop && shop.plan !== status.plan) {
+          updateShop({});
+        }
+      })
+      .catch(() => {
+        // Silently ignore — plan check is non-critical
+      });
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <div className="dashboard-shell">
@@ -42,7 +63,7 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        {/* Page content injected here by react-router */}
+        {/* Page content */}
         <main className="dashboard-main">
           <Outlet />
         </main>

@@ -75,13 +75,17 @@ export default function UpgradePage() {
           setSuccess(
             data.message || 'Upgrade successful! You can now add up to 40 products.'
           );
-          setStatus((prev) => ({
-            ...prev,
-            plan:          'premium',
-            isPremium:     true,
-            productLimit:  PREMIUM_PRODUCTS,
-            daysRemaining: PLAN_DAYS,
-          }));
+          const expiresAt = new Date();
+expiresAt.setDate(expiresAt.getDate() + PLAN_DAYS);
+
+setStatus((prev) => ({
+  ...prev,
+  plan:          'premium',
+  isPremium:     true,
+  productLimit:  PREMIUM_PRODUCTS,
+  daysRemaining: PLAN_DAYS,
+  planExpiresAt: expiresAt.toISOString(),
+}));
           return updateShop({});
         })
         .catch(() => {
