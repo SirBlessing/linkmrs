@@ -150,7 +150,8 @@ input,textarea,select { font-family: inherit; font-size: inherit; color: inherit
 }
 .btn:active { transform: scale(0.97); }
 .btn .material-symbols-outlined { font-size: 1.1rem; }
-.btn--primary   { background: var(--c-primary); color: var(--c-on-primary); }
+/* .btn--primary   { background: var(--c-primary); color: var(--c-on-primary); } */
+.btn--primary { background: var(--c-primary); color: var(--c-on-primary) !important; }
 .btn--primary:hover { opacity: 0.88; }
 .btn--secondary { background: var(--c-secondary-cont); color: var(--c-on-secondary-cont); }
 .btn--secondary:hover { opacity: 0.88; }
