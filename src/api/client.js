@@ -1,6 +1,6 @@
 // src/api/client.js
 const BASE = import.meta.env.VITE_API_URL || 'https://linkmrs.onrender.com';
-const TOKEN_KEY = 'Linkmrs_token';
+const TOKEN_KEY = 'vendly_token';
 
 export const getToken = () => localStorage.getItem(TOKEN_KEY);
 export const setToken = (t) => t
@@ -33,7 +33,7 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
       data?.error ||
       (data?.errors && Object.values(data.errors)[0]) ||
       `Request failed (${res.status})`;
-    const err = new Error(message);
+    const err       = new Error(message);
     err.status      = res.status;
     err.fieldErrors = data?.errors || null;
     err.showUpgrade = data?.showUpgrade || false;
@@ -66,10 +66,13 @@ export const api = {
   updateOrderStatus : (id, status) => request(`/orders/${id}/status`, { method: 'PATCH', body: { status } }),
 
   // Analytics
-  getAnalytics: () => request('/analytics'),
+  getAnalytics : () => request('/analytics'),
 
   // Payments / plan
-  getPlans      : ()    => request('/payments/plans', { auth: false }),
+  getPlans      : ()    => request('/payments/plans',  { auth: false }),
   getPlanStatus : ()    => request('/payments/status'),
   verifyPayment : (ref) => request('/payments/verify', { method: 'POST', body: { reference: ref } }),
+
+  // Contact form  ← NEW
+  sendContact : (body) => request('/contact', { method: 'POST', body, auth: false }),
 };

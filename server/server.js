@@ -12,6 +12,7 @@ import productRoutes  from './routes/products.js';
 import orderRoutes    from './routes/orders.js';
 import analyticsRoutes from './routes/analytics.js';
 import paymentRoutes  from './routes/payments.js';
+import contactRoutes  from './routes/contact.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -33,6 +34,7 @@ app.use('/api/products',  productRoutes);
 app.use('/api/orders',    orderRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/payments',  paymentRoutes);
+app.use('/api/contact',   contactRoutes);
 
 app.get('/api/health', (_req, res) =>
   res.json({ ok: true, time: new Date().toISOString() })
