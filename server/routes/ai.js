@@ -17,7 +17,7 @@ const genAI  = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function callAI(systemPrompt, history, userMessage) {
   const model = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
+    model: 'gemini-3.8-flash',
     systemInstruction: systemPrompt,
   });
 
