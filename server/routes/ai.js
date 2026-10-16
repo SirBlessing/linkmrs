@@ -17,15 +17,43 @@ const genAI  = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function callAI(systemPrompt, history, userMessage) {
   const model = genAI.getGenerativeModel({
-    model:             'gemini-1.5-flash',
+    model: 'gemini-1.5-flash',
     systemInstruction: systemPrompt,
   });
 
-  const chat = model.startChat({
-    history: history.map((h) => ({
-      role:  h.role === 'assistant' ? 'model' : 'user',
+  // Convert the history into Gemini's expected format.
+  const chatHistory = (history || [])
+    .map((h) => ({
+      role:
+        h.role === 'assistant' || h.role === 'model'
+          ? 'model'
+          : 'user',
       parts: [{ text: h.content }],
-    })),
+    }))
+    .filter((h) => h.parts[0].text?.trim());
+
+  // Gemini requires the first history message to be from the user.
+  while (chatHistory.length > 0 && chatHistory[0].role !== 'user') {
+    chatHistory.shift();
+  }
+
+  // Remove consecutive messages with the same role.
+  const validHistory = [];
+
+  for (const message of chatHistory) {
+    if (
+      validHistory.length === 0 ||
+      validHistory[validHistory.length - 1].role !== message.role
+    ) {
+      validHistory.push(message);
+    } else {
+      validHistory[validHistory.length - 1].parts[0].text +=
+        '\n' + message.parts[0].text;
+    }
+  }
+
+  const chat = model.startChat({
+    history: validHistory,
   });
 
   const result = await chat.sendMessage(userMessage);
