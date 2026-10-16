@@ -18,7 +18,10 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <div className="navbar__inner">
-        <Link to="/" className="navbar__brand" onClick={close}>Linkmrs</Link>
+        <Link to="/" className="navbar__brand" onClick={close}>
+  <span className="logo-icon material-symbols-outlined"></span>
+  <span className="logo-text">Linkmrs</span>
+</Link>
 
         {/* Desktop links */}
         <div className="navbar__links">

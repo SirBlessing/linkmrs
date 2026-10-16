@@ -1561,3 +1561,28 @@ input,textarea,select { font-family: inherit; font-size: inherit; color: inherit
   font-variation-settings: 'FILL' 1;
 }
 .ai-builder__done p { color: var(--c-on-surface-2); }
+
+
+
+
+.navbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  text-decoration: none !important;
+}
+
+.logo-icon {
+  font-size: 1.4rem;
+  color: var(--c-secondary);
+  font-variation-settings: 'FILL' 1;
+  font-weight: 700;
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--c-primary);
+  letter-spacing: -0.03em;
+}
