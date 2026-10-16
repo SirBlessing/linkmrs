@@ -1,22 +1,22 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-import ProtectedRoute   from './components/ProtectedRoute.jsx';
+import ProtectedRoute     from './components/ProtectedRoute.jsx';
 
-import LandingPage      from './pages/LandingPage.jsx';
-import DiscoverPage     from './pages/DiscoverPage.jsx';
-import AboutPage        from './pages/AboutPage.jsx';
-import PricingPage      from './pages/PricingPage.jsx';
-import ContactPage      from './pages/ContactPage.jsx';
-import TermsPage        from './pages/TermsPage.jsx';
-import PrivacyPage      from './pages/PrivacyPage.jsx';
-import StorefrontPage   from './pages/StorefrontPage.jsx';
-import LoginPage        from './pages/LoginPage.jsx';
-import RegisterPage     from './pages/RegisterPage.jsx';
+import LandingPage        from './pages/LandingPage.jsx';
+import DiscoverPage       from './pages/DiscoverPage.jsx';
+import AboutPage          from './pages/AboutPage.jsx';
+import PricingPage        from './pages/PricingPage.jsx';
+import ContactPage        from './pages/ContactPage.jsx';
+import TermsPage          from './pages/TermsPage.jsx';
+import PrivacyPage        from './pages/PrivacyPage.jsx';
+import FaqPage            from './pages/FaqPage.jsx';
+import HowItWorksPage     from './pages/HowItWorksPage.jsx';
+import StorefrontPage     from './pages/StorefrontPage.jsx';
+import LoginPage          from './pages/LoginPage.jsx';
+import RegisterPage       from './pages/RegisterPage.jsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.jsx';
-// import FaqPage          from './pages/FaqPage.jsx';
-import HowItWorksPage   from './pages/HowItWorksPage.jsx';
-import NotFoundPage     from './pages/NotFoundPage.jsx';
+import NotFoundPage       from './pages/NotFoundPage.jsx';
 
 import DashboardLayout  from './pages/dashboard/DashboardLayout.jsx';
 import OverviewPage     from './pages/dashboard/OverviewPage.jsx';
@@ -25,6 +25,7 @@ import OrdersPage       from './pages/dashboard/OrdersPage.jsx';
 import AnalyticsPage    from './pages/dashboard/AnalyticsPage.jsx';
 import SettingsPage     from './pages/dashboard/SettingsPage.jsx';
 import UpgradePage      from './pages/dashboard/UpgradePage.jsx';
+import AiPage           from './pages/dashboard/AiPage.jsx';
 
 export default function App() {
   return (
@@ -37,7 +38,7 @@ export default function App() {
       <Route path="/contact"           element={<ContactPage />} />
       <Route path="/terms"             element={<TermsPage />} />
       <Route path="/privacy"           element={<PrivacyPage />} />
-      {/* <Route path="/faq"               element={<FaqPage />} /> */}
+      <Route path="/faq"               element={<FaqPage />} />
       <Route path="/how-it-works"      element={<HowItWorksPage />} />
       <Route path="/shop/:slug"        element={<StorefrontPage />} />
       <Route path="/login"             element={<LoginPage />} />
@@ -59,6 +60,7 @@ export default function App() {
         <Route path="analytics"   element={<AnalyticsPage />} />
         <Route path="settings"    element={<SettingsPage />} />
         <Route path="upgrade"     element={<UpgradePage />} />
+        <Route path="ai"          element={<AiPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />

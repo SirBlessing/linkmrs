@@ -2,10 +2,10 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 
 const NAV = [
-  { to: '/dashboard',            end: true, icon: 'dashboard',    label: 'Overview'  },
+  { to: '/dashboard',            end: true, icon: 'dashboard',    label: 'Home'      },
   { to: '/dashboard/products',              icon: 'inventory_2',   label: 'Products'  },
   { to: '/dashboard/orders',                icon: 'shopping_cart', label: 'Orders'    },
-  { to: '/dashboard/analytics',             icon: 'bar_chart',     label: 'Analytics' },
+  { to: '/dashboard/ai',                    icon: 'smart_toy',     label: 'AI Coach'  },
   { to: '/dashboard/settings',              icon: 'settings',      label: 'Settings'  },
 ];
 
@@ -18,7 +18,7 @@ export default function BottomNav() {
           to={to}
           end={end}
           className={({ isActive }) =>
-            `bottom-nav__item${isActive ? ' is-active' : ''}`
+            `bottom-nav__item${isActive ? ' is-active' : ''}${label === 'AI Coach' ? ' bottom-nav__item--ai' : ''}`
           }
         >
           <span className="material-symbols-outlined">{icon}</span>

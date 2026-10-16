@@ -6,13 +6,14 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
-import authRoutes     from './routes/auth.js';
-import shopRoutes     from './routes/shops.js';
-import productRoutes  from './routes/products.js';
-import orderRoutes    from './routes/orders.js';
+import authRoutes      from './routes/auth.js';
+import shopRoutes      from './routes/shops.js';
+import productRoutes   from './routes/products.js';
+import orderRoutes     from './routes/orders.js';
 import analyticsRoutes from './routes/analytics.js';
-import paymentRoutes  from './routes/payments.js';
-import contactRoutes  from './routes/contact.js';
+import paymentRoutes   from './routes/payments.js';
+import contactRoutes   from './routes/contact.js';
+import aiRoutes        from './routes/ai.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -35,6 +36,7 @@ app.use('/api/orders',    orderRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/payments',  paymentRoutes);
 app.use('/api/contact',   contactRoutes);
+app.use('/api/ai',        aiRoutes);
 
 app.get('/api/health', (_req, res) =>
   res.json({ ok: true, time: new Date().toISOString() })

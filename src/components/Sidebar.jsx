@@ -15,7 +15,9 @@ export default function Sidebar() {
   const navigate = useNavigate();
 
   const now       = new Date();
-  const isPremium = shop?.plan === 'premium' && shop?.planExpiresAt && new Date(shop.planExpiresAt) > now;
+  const isPremium = shop?.plan === 'premium' &&
+                    shop?.planExpiresAt &&
+                    new Date(shop.planExpiresAt) > now;
 
   const handleLogout = () => { logout(); navigate('/'); };
 
@@ -41,7 +43,19 @@ export default function Sidebar() {
           </NavLink>
         ))}
 
-        {/* Upgrade link — shows differently depending on plan */}
+        {/* AI Assistant link */}
+        <NavLink
+          to="/dashboard/ai"
+          className={({ isActive }) =>
+            `sidebar__link sidebar__link--ai${isActive ? ' sidebar__link--active' : ''}`
+          }
+        >
+          <span className="material-symbols-outlined">smart_toy</span>
+          AI Coach
+          <span className="sidebar__ai-badge">NEW</span>
+        </NavLink>
+
+        {/* Upgrade link */}
         <NavLink
           to="/dashboard/upgrade"
           className={({ isActive }) =>

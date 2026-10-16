@@ -1,4 +1,3 @@
-// src/api/client.js
 const BASE = import.meta.env.VITE_API_URL || 'https://linkmrs.onrender.com';
 const TOKEN_KEY = 'vendly_token';
 
@@ -13,7 +12,6 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
     const token = getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
   }
-
   let res;
   try {
     res = await fetch(`${BASE}/api${path}`, {
@@ -24,10 +22,8 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
   } catch {
     throw new Error('Cannot reach the server. Is it running?');
   }
-
   const isJson = res.headers.get('content-type')?.includes('application/json');
   const data   = isJson ? await res.json().catch(() => ({})) : null;
-
   if (!res.ok) {
     const message =
       data?.error ||
@@ -39,7 +35,6 @@ async function request(path, { method = 'GET', body, auth = true } = {}) {
     err.showUpgrade = data?.showUpgrade || false;
     throw err;
   }
-
   return data;
 }
 
@@ -68,11 +63,16 @@ export const api = {
   // Analytics
   getAnalytics : () => request('/analytics'),
 
-  // Payments / plan
+  // Payments
   getPlans      : ()    => request('/payments/plans',  { auth: false }),
   getPlanStatus : ()    => request('/payments/status'),
   verifyPayment : (ref) => request('/payments/verify', { method: 'POST', body: { reference: ref } }),
 
-  // Contact form  ← NEW
+  // Contact
   sendContact : (body) => request('/contact', { method: 'POST', body, auth: false }),
+
+  // AI ← NEW
+  aiCoach        : (body)               => request('/ai/coach',      { method: 'POST', body }),
+  aiCustomer     : (body)               => request('/ai/customer',   { method: 'POST', body, auth: false }),
+  aiBuildShop    : (body)               => request('/ai/build-shop', { method: 'POST', body }),
 };

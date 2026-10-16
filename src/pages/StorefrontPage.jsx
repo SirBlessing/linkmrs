@@ -4,18 +4,17 @@ import { api } from '../api/client.js';
 import ProductCard from '../components/ProductCard.jsx';
 import CartBar from '../components/CartBar.jsx';
 import CartSheet from '../components/CartSheet.jsx';
+import AiCustomerChat from '../components/AiCustomerChat.jsx';
 import { formatPrice } from '../utils.js';
 
 export default function StorefrontPage() {
   const { slug } = useParams();
 
-  // Shop + product data
   const [shop,      setShop]    = useState(null);
   const [products,  setProducts] = useState([]);
   const [isLoading, setLoad]    = useState(true);
   const [loadError, setLoadErr] = useState('');
 
-  // Cart state
   const [cart,          setCart]       = useState({});
   const [isCartOpen,    setCartOpen]   = useState(false);
   const [customerName,  setCustName]   = useState('');
@@ -24,34 +23,26 @@ export default function StorefrontPage() {
   const [checkoutError, setChkErr]     = useState('');
   const [orderDone,     setOrderDone]  = useState(false);
 
-  // Fetch shop + products when slug changes
   useEffect(() => {
     let live = true;
     setLoad(true); setLoadErr(''); setCart({}); setOrderDone(false);
-
-    api.getShop(slug)               // GET /api/shops/:slug
+    api.getShop(slug)
       .then((d) => { if (!live) return; setShop(d.shop); setProducts(d.products); })
       .catch((e) => { if (live) setLoadErr(e.message); })
       .finally(() => { if (live) setLoad(false); });
-
     return () => { live = false; };
   }, [slug]);
 
-  // Cart derived values
-  const lineItems   = useMemo(
-    () => products.filter((p) => cart[p.id] > 0).map((p) => ({ ...p, quantity: cart[p.id] })),
-    [products, cart]
-  );
-  const totalItems  = useMemo(() => Object.values(cart).reduce((s, q) => s + q, 0), [cart]);
-  const totalPrice  = useMemo(() => lineItems.reduce((s, i) => s + i.price * i.quantity, 0), [lineItems]);
+  const lineItems  = useMemo(() => products.filter((p) => cart[p._id] > 0).map((p) => ({ ...p, quantity: cart[p._id] })), [products, cart]);
+  const totalItems = useMemo(() => Object.values(cart).reduce((s, q) => s + q, 0), [cart]);
+  const totalPrice = useMemo(() => lineItems.reduce((s, i) => s + i.price * i.quantity, 0), [lineItems]);
 
-  const addToCart     = (id) => { setOrderDone(false); setCart((p) => ({ ...p, [id]: (p[id] || 0) + 1 })); };
+  const addToCart      = (id) => { setOrderDone(false); setCart((p) => ({ ...p, [id]: (p[id] || 0) + 1 })); };
   const removeFromCart = (id) => setCart((p) => {
     if ((p[id] || 0) <= 1) { const n = { ...p }; delete n[id]; return n; }
     return { ...p, [id]: p[id] - 1 };
   });
 
-  // Build the WhatsApp message from the server-confirmed order
   const buildMsg = (order) => [
     `🛒 New Order — ${shop.shopName}`,
     '',
@@ -68,20 +59,16 @@ export default function StorefrontPage() {
     if (!lineItems.length) return;
     setChkErr(''); setPlacing(true);
     try {
-      // POST /api/orders  (backend looks up prices — client prices are ignored)
       const { order, shopWhatsappNumber } = await api.placeOrder({
         shopSlug: slug,
-        items: lineItems.map((i) => ({ productId: i.id, quantity: i.quantity })),
+        items: lineItems.map((i) => ({ productId: i._id, quantity: i.quantity })),
         customerName,
         customerPhone,
       });
-
-      // Open WhatsApp with the server-confirmed totals
       if (shopWhatsappNumber) {
         const url = `https://wa.me/${shopWhatsappNumber}?text=${encodeURIComponent(buildMsg(order))}`;
         window.open(url, '_blank', 'noopener,noreferrer');
       }
-
       setCart({}); setCartOpen(false); setOrderDone(true);
     } catch (e) {
       setChkErr(e.message);
@@ -90,7 +77,6 @@ export default function StorefrontPage() {
     }
   };
 
-  // ── Render states ──────────────────────────────────────────
   if (isLoading) {
     return (
       <div className="full-page-loader">
@@ -105,7 +91,7 @@ export default function StorefrontPage() {
       <div className="status-page">
         <span className="material-symbols-outlined status-page__icon">storefront</span>
         <h1 className="heading-lg">Shop not found</h1>
-        <p className="status-page__text">{loadError || `No shop at Linkmrs.com/${slug}`}</p>
+        <p className="status-page__text">{loadError || `No shop at linkmrs.com/${slug}`}</p>
         <div className="status-page__actions">
           <Link to="/discover" className="btn btn--primary">Browse other shops</Link>
           <Link to="/" className="btn btn--ghost">Home</Link>
@@ -116,7 +102,6 @@ export default function StorefrontPage() {
 
   return (
     <div className="storefront">
-      {/* Minimal top bar */}
       <header className="storefront__topbar">
         <Link to="/" className="brand-mark">Linkmrs</Link>
         <Link to="/discover" className="text-btn">
@@ -126,7 +111,6 @@ export default function StorefrontPage() {
       </header>
 
       <main className="storefront__main">
-        {/* Shop hero */}
         <section className="storefront__hero">
           <div className="storefront__avatar-wrap">
             <img src={shop.logo} alt={`${shop.shopName} logo`} className="storefront__avatar" />
@@ -143,7 +127,6 @@ export default function StorefrontPage() {
           )}
         </section>
 
-        {/* Order success notice */}
         {orderDone && (
           <div className="banner banner--success">
             <span className="material-symbols-outlined">check_circle</span>
@@ -151,7 +134,6 @@ export default function StorefrontPage() {
           </div>
         )}
 
-        {/* Product grid */}
         <section className="storefront__catalog">
           <div className="storefront__catalog-header">
             <h2 className="heading-md">Products</h2>
@@ -166,11 +148,11 @@ export default function StorefrontPage() {
             <div className="storefront__grid">
               {products.map((p) => (
                 <ProductCard
-                  key={p.id}
-                  product={p}
+                  key={p._id}
+                  product={{ ...p, id: p._id }}
                   currency={shop.currency}
-                  quantity={cart[p.id] || 0}
-                  onAdd={addToCart}
+                  quantity={cart[p._id] || 0}
+                  onAdd={() => addToCart(p._id)}
                 />
               ))}
             </div>
@@ -178,15 +160,13 @@ export default function StorefrontPage() {
         </section>
       </main>
 
-      {/* Sticky cart bar */}
+      {/* Cart */}
       <CartBar
         totalItems={totalItems}
         totalPrice={totalPrice}
         currency={shop.currency}
         onOpenCart={() => setCartOpen(true)}
       />
-
-      {/* Cart review sheet */}
       <CartSheet
         isOpen={isCartOpen}
         onClose={() => setCartOpen(false)}
@@ -194,7 +174,7 @@ export default function StorefrontPage() {
         totalItems={totalItems}
         totalPrice={totalPrice}
         currency={shop.currency}
-        onIncrement={addToCart}
+        onIncrement={(id) => addToCart(id)}
         onDecrement={removeFromCart}
         customerName={customerName}
         customerPhone={customerPhone}
@@ -204,6 +184,9 @@ export default function StorefrontPage() {
         isPlacingOrder={placing}
         checkoutError={checkoutError}
       />
+
+      {/* AI Customer Chat widget */}
+      <AiCustomerChat shopSlug={slug} shopName={shop.shopName} />
     </div>
   );
 }
