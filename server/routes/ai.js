@@ -17,44 +17,25 @@ const genAI  = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function callAI(systemPrompt, history, userMessage) {
   const model = genAI.getGenerativeModel({
-    model: 'gemini-3.8-flash',
+    model:             'gemini-2.0-flash-lite',  // free, fast, reliable
     systemInstruction: systemPrompt,
   });
 
-  // Convert the history into Gemini's expected format.
-  const chatHistory = (history || [])
-    .map((h) => ({
-      role:
-        h.role === 'assistant' || h.role === 'model'
-          ? 'model'
-          : 'user',
-      parts: [{ text: h.content }],
-    }))
-    .filter((h) => h.parts[0].text?.trim());
+  // Gemini requires history to start with 'user' and strictly alternate
+  // Filter out any leading assistant messages (e.g. the greeting)
+  const safeHistory = history
+    .filter((h) => h.role === 'user' || h.role === 'assistant')
+    .reduce((acc, msg) => {
+      const geminiRole = msg.role === 'assistant' ? 'model' : 'user';
+      // Skip if first message would be from model
+      if (acc.length === 0 && geminiRole === 'model') return acc;
+      // Skip consecutive same roles
+      if (acc.length > 0 && acc[acc.length - 1].role === geminiRole) return acc;
+      acc.push({ role: geminiRole, parts: [{ text: msg.content }] });
+      return acc;
+    }, []);
 
-  // Gemini requires the first history message to be from the user.
-  while (chatHistory.length > 0 && chatHistory[0].role !== 'user') {
-    chatHistory.shift();
-  }
-
-  // Remove consecutive messages with the same role.
-  const validHistory = [];
-
-  for (const message of chatHistory) {
-    if (
-      validHistory.length === 0 ||
-      validHistory[validHistory.length - 1].role !== message.role
-    ) {
-      validHistory.push(message);
-    } else {
-      validHistory[validHistory.length - 1].parts[0].text +=
-        '\n' + message.parts[0].text;
-    }
-  }
-
-  const chat = model.startChat({
-    history: validHistory,
-  });
+  const chat = model.startChat({ history: safeHistory });
 
   const result = await chat.sendMessage(userMessage);
   return result.response.text();
