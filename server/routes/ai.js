@@ -8,28 +8,18 @@ import { requireAuth } from '../middleware/auth.js';
 const router = Router();
 const genAI  = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// ─────────────────────────────────────────────────────────────
-//  TO SWITCH TO CLAUDE LATER — only change these 3 things:
-//  1. npm remove @google/generative-ai
-//  2. npm install @anthropic-ai/sdk
-//  3. Replace the callAI() function below with the Claude version
-// ─────────────────────────────────────────────────────────────
-
-async function callAI(systemPrompt, history, userMessage) {
+async function callAI(systemPrompt, history, userMessage, res = null) {
   const model = genAI.getGenerativeModel({
-    model: 'gemini-3.8-flash',  // free, fast, reliable
+    model:             'gemini-2.0-flash',
     systemInstruction: systemPrompt,
   });
 
-  // Gemini requires history to start with 'user' and strictly alternate
-  // Filter out any leading assistant messages (e.g. the greeting)
+  // Gemini requires history to start with user and strictly alternate
   const safeHistory = history
     .filter((h) => h.role === 'user' || h.role === 'assistant')
     .reduce((acc, msg) => {
       const geminiRole = msg.role === 'assistant' ? 'model' : 'user';
-      // Skip if first message would be from model
       if (acc.length === 0 && geminiRole === 'model') return acc;
-      // Skip consecutive same roles
       if (acc.length > 0 && acc[acc.length - 1].role === geminiRole) return acc;
       acc.push({ role: geminiRole, parts: [{ text: msg.content }] });
       return acc;
@@ -37,6 +27,26 @@ async function callAI(systemPrompt, history, userMessage) {
 
   const chat = model.startChat({ history: safeHistory });
 
+  // Streaming mode — words appear immediately as they are generated
+  if (res) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    const result = await chat.sendMessageStream(userMessage);
+
+    for await (const chunk of result.stream) {
+      const text = chunk.text();
+      if (text) {
+        res.write(`data: ${JSON.stringify({ chunk: text })}\n\n`);
+      }
+    }
+    res.write('data: [DONE]\n\n');
+    res.end();
+    return;
+  }
+
+  // Non-streaming fallback (used by build-shop)
   const result = await chat.sendMessage(userMessage);
   return result.response.text();
 }
@@ -51,7 +61,7 @@ router.post('/coach', requireAuth, async (req, res) => {
     if (!shop) return res.status(404).json({ error: 'Shop not found.' });
 
     const products = await Product.find({ shopId: shop._id });
-    const orders   = await Order.find({ shopId: shop._id }).sort({ createdAt: -1 }).limit(50);
+    const orders   = await Order.find({ shopId: shop._id }).sort({ createdAt: -1 }).limit(10);
 
     const totalSales      = orders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + o.total, 0);
     const pendingOrders   = orders.filter(o => o.status === 'pending').length;
@@ -70,36 +80,30 @@ router.post('/coach', requireAuth, async (req, res) => {
       .slice(0, 5);
 
     const systemPrompt = `You are an AI business coach for ${shop.shopName}, a micro-vendor shop on Linkmrs.
-You have full access to their real business data. Be specific, practical, and concise.
+You have access to their real business data. Be specific, practical, and concise.
 Respond in plain English. If the vendor writes in Nigerian Pidgin, reply in Pidgin.
-Never make up numbers — only use the data provided below.
-Keep answers short and actionable unless asked for detail.
+Never make up numbers — only use the data below. Keep answers short and actionable.
 
-SHOP DATA:
-- Shop Name: ${shop.shopName}
-- Plan: ${shop.plan} (${shop.plan === 'premium' ? '40 products allowed' : '5 products allowed'})
-- Currency: ${shop.currency}
-- Location: ${shop.location || 'Not set'}
+SHOP: ${shop.shopName} | Plan: ${shop.plan} | Currency: ${shop.currency} | Location: ${shop.location || 'Not set'}
 
 PRODUCTS (${products.length} total):
 ${products.map(p => `- ${p.name}: ${shop.currency}${p.price} — ${p.description}`).join('\n') || 'No products yet'}
 
 SALES SUMMARY:
-- Total Revenue: ${shop.currency}${totalSales.toFixed(2)}
-- Total Orders: ${orders.length}
-- Pending: ${pendingOrders} | Completed: ${completedOrders} | Cancelled: ${orders.filter(o => o.status === 'cancelled').length}
+- Revenue: ${shop.currency}${totalSales.toFixed(2)} | Orders: ${orders.length} | Pending: ${pendingOrders} | Completed: ${completedOrders}
 
-TOP PRODUCTS BY REVENUE:
+TOP PRODUCTS:
 ${topProducts.map(([name, d]) => `- ${name}: ${d.quantity} sold, ${shop.currency}${d.revenue.toFixed(2)}`).join('\n') || 'No sales yet'}
 
-RECENT ORDERS (last 5):
+RECENT ORDERS:
 ${orders.slice(0, 5).map(o => `- ${o.customerName || 'Anonymous'}: ${shop.currency}${o.total} (${o.status}) — ${new Date(o.createdAt).toDateString()}`).join('\n') || 'No orders yet'}`;
 
-    const reply = await callAI(systemPrompt, history, message.trim());
-    res.json({ reply });
+    await callAI(systemPrompt, history, message.trim(), res);
   } catch (err) {
     console.error('AI coach error:', err);
-    res.status(500).json({ error: 'AI is unavailable right now. Try again shortly.' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'AI is unavailable right now. Try again shortly.' });
+    }
   }
 });
 
@@ -117,30 +121,31 @@ router.post('/customer', async (req, res) => {
 
     const systemPrompt = `You are a friendly AI shopping assistant for ${shop.shopName} on Linkmrs.
 Help customers find products, suggest combinations, and answer questions.
-Understand both English and Nigerian Pidgin English naturally — respond in whatever language the customer uses.
+Understand both English and Nigerian Pidgin — respond in whatever language the customer uses.
 Be warm, brief, and helpful. Only recommend products from the list below.
-When a customer is ready to order, summarise their items clearly and tell them to tap the WhatsApp button.
+When a customer is ready to order, summarise their items and tell them to tap the WhatsApp button.
 
 SHOP: ${shop.shopName}
 ${shop.bio ? `ABOUT: ${shop.bio}` : ''}
 ${shop.location ? `LOCATION: ${shop.location}` : ''}
 CURRENCY: ${shop.currency}
 
-PRODUCTS AVAILABLE:
-${products.map(p => `- ${p.name}: ${shop.currency}${p.price}\n  ${p.description}`).join('\n') || 'No products available yet.'}
+PRODUCTS:
+${products.map(p => `- ${p.name}: ${shop.currency}${p.price} — ${p.description}`).join('\n') || 'No products yet.'}
 
 RULES:
 - Never suggest products not in the list above
 - If something is not available, say so and suggest the closest alternative
 - If a budget is mentioned, only suggest items within that budget
-- Keep replies under 4 sentences unless listing multiple products
-- Always end order summaries with: "Tap the WhatsApp button to send your order to the vendor."`;
+- Keep replies short — max 4 sentences unless listing products
+- End order summaries with: "Tap the WhatsApp button to send your order."`;
 
-    const reply = await callAI(systemPrompt, history, message.trim());
-    res.json({ reply });
+    await callAI(systemPrompt, history, message.trim(), res);
   } catch (err) {
     console.error('AI customer error:', err);
-    res.status(500).json({ error: 'AI is unavailable right now.' });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'AI is unavailable right now.' });
+    }
   }
 });
 
@@ -151,25 +156,25 @@ router.post('/build-shop', requireAuth, async (req, res) => {
     if (!description?.trim())
       return res.status(400).json({ error: 'Business description is required.' });
 
-   const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
     const prompt = `You are helping a Nigerian micro-vendor set up their online shop on Linkmrs.
-Based on their business description, generate a shop profile and up to 5 products.
-Prices must be realistic for the Nigerian market in Naira (no currency symbol, just numbers).
+Based on their description, generate a shop profile and up to 5 products.
+Prices must be realistic for the Nigerian market in Naira (numbers only, no symbol).
 
-Return ONLY valid JSON — no markdown, no explanation, just the JSON object:
+Return ONLY valid JSON — no markdown, no explanation:
 {
-  "shopBio": "A short, warm, professional 1-2 sentence description of the shop",
+  "shopBio": "A short warm professional 1-2 sentence shop description",
   "products": [
     {
       "name": "Product name",
       "price": 5000,
-      "description": "Short compelling 1-sentence product description"
+      "description": "Short 1-sentence product description"
     }
   ]
 }
 
-VENDOR'S DESCRIPTION:
+VENDOR DESCRIPTION:
 ${description.trim()}`;
 
     const result = await model.generateContent(prompt);

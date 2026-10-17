@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { api } from '../../api/client.js';
+
+const BASE = import.meta.env.VITE_API_URL || 'https://linkmrs.onrender.com';
 
 const QUICK_PROMPTS = [
+  'How is my shop performing overall?',
   'Which product is making me the most money?',
   'Why did my sales drop recently?',
-  'Which customers order the most?',
   'What should I focus on to grow my revenue?',
+  'Which customers order the most?',
   'Should I remove any products from my shop?',
-  'How is my shop performing overall?',
 ];
 
 function Message({ msg }) {
@@ -21,9 +22,10 @@ function Message({ msg }) {
         </div>
       )}
       <div className="ai-message__bubble">
-        {msg.content.split('\n').map((line, i) => (
-          <p key={i} style={{ margin: '0 0 0.25rem' }}>{line}</p>
-        ))}
+        {msg.content
+          ? msg.content.split('\n').map((line, i) => <p key={i} style={{ margin: '0 0 0.25rem' }}>{line}</p>)
+          : <span className="ai-typing-placeholder">▍</span>
+        }
       </div>
     </div>
   );
@@ -32,16 +34,16 @@ function Message({ msg }) {
 export default function AiPage() {
   const { shop } = useAuth();
 
-  const [messages,  setMessages]  = useState([]);
-  const [input,     setInput]     = useState('');
-  const [loading,   setLoading]   = useState(false);
-  const [error,     setError]     = useState('');
+  const [messages, setMessages] = useState([]);
+  const [input,    setInput]    = useState('');
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState('');
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+  }, [messages]);
 
   const sendMessage = async (text) => {
     const msg = (text || input).trim();
@@ -50,20 +52,54 @@ export default function AiPage() {
     setInput('');
     setError('');
 
-    const userMsg  = { role: 'user', content: msg };
-    const newMsgs  = [...messages, userMsg];
-    setMessages(newMsgs);
+    const userMsg   = { role: 'user', content: msg };
+    const prevMsgs  = [...messages, userMsg];
+    setMessages([...prevMsgs, { role: 'assistant', content: '' }]);
     setLoading(true);
 
     try {
-      const { reply } = await api.aiCoach({
-        message: msg,
-        history: messages,
+      const response = await fetch(`${BASE}/api/ai/coach`, {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('vendly_token')}`,
+        },
+        body: JSON.stringify({ message: msg, history: messages }),
       });
-      setMessages([...newMsgs, { role: 'assistant', content: reply }]);
+
+      if (!response.ok) throw new Error('AI request failed');
+
+      const reader  = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const text  = decoder.decode(value);
+        const lines = text.split('\n').filter((l) => l.startsWith('data: '));
+
+        for (const line of lines) {
+          const data = line.replace('data: ', '').trim();
+          if (data === '[DONE]') break;
+          try {
+            const { chunk } = JSON.parse(data);
+            if (chunk) {
+              setMessages((p) => {
+                const updated = [...p];
+                updated[updated.length - 1] = {
+                  role:    'assistant',
+                  content: updated[updated.length - 1].content + chunk,
+                };
+                return updated;
+              });
+            }
+          } catch {}
+        }
+      }
     } catch (err) {
-      setError(err.message);
-      setMessages(newMsgs.slice(0, -1));
+      setError('AI is unavailable right now. Try again.');
+      setMessages((p) => p.slice(0, -1));
     } finally {
       setLoading(false);
       inputRef.current?.focus();
@@ -71,16 +107,7 @@ export default function AiPage() {
   };
 
   const handleKey = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  const clearChat = () => {
-    setMessages([]);
-    setError('');
-    inputRef.current?.focus();
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
   return (
@@ -94,30 +121,29 @@ export default function AiPage() {
             AI Business Coach
           </h1>
           <p className="page__subtitle">
-            Ask anything about your shop. The AI reads your real data — products, orders, revenue — and gives you specific answers.
+            Ask anything about your shop — products, sales, customers, strategy. Understands English and Pidgin.
           </p>
         </div>
         {messages.length > 0 && (
-          <button type="button" className="btn btn--ghost btn--sm" onClick={clearChat}>
+          <button type="button" className="btn btn--ghost btn--sm" onClick={() => { setMessages([]); setError(''); }}>
             <span className="material-symbols-outlined">refresh</span>
             New chat
           </button>
         )}
       </header>
 
-      {/* Data context cards */}
       <div className="ai-context-cards">
         <div className="ai-context-card">
           <span className="material-symbols-outlined">inventory_2</span>
-          <span>Products, prices &amp; descriptions</span>
+          <span>Products &amp; prices</span>
         </div>
         <div className="ai-context-card">
           <span className="material-symbols-outlined">shopping_cart</span>
-          <span>All orders &amp; statuses</span>
+          <span>Orders &amp; statuses</span>
         </div>
         <div className="ai-context-card">
           <span className="material-symbols-outlined">bar_chart</span>
-          <span>Sales &amp; revenue data</span>
+          <span>Sales &amp; revenue</span>
         </div>
         <div className="ai-context-card">
           <span className="material-symbols-outlined">people</span>
@@ -125,67 +151,37 @@ export default function AiPage() {
         </div>
       </div>
 
-      {/* Chat area */}
       <div className="ai-chat">
         <div className="ai-chat__thread">
           {messages.length === 0 ? (
             <div className="ai-chat__empty">
               <span className="material-symbols-outlined ai-chat__empty-icon">smart_toy</span>
-              <h2 className="heading-md">
-                Hey {shop?.shopName?.split(' ')[0] || 'there'} 👋
-              </h2>
-              <p>
-                I have access to all your shop data. Ask me anything about your
-                business — sales, products, customers, strategy.
-              </p>
-
+              <h2 className="heading-md">Hey {shop?.shopName?.split(' ')[0] || 'there'} 👋</h2>
+              <p>I have access to all your shop data. Ask me anything about your business.</p>
               <div className="ai-quick-prompts">
                 {QUICK_PROMPTS.map((prompt) => (
-                  <button
-                    key={prompt}
-                    type="button"
-                    className="ai-quick-prompt"
-                    onClick={() => sendMessage(prompt)}
-                  >
+                  <button key={prompt} type="button" className="ai-quick-prompt" onClick={() => sendMessage(prompt)}>
                     {prompt}
                   </button>
                 ))}
               </div>
             </div>
           ) : (
-            <>
-              {messages.map((msg, i) => (
-                <Message key={i} msg={msg} />
-              ))}
-              {loading && (
-                <div className="ai-message ai-message--assistant">
-                  <div className="ai-message__avatar">
-                    <span className="material-symbols-outlined">smart_toy</span>
-                  </div>
-                  <div className="ai-message__bubble ai-message__bubble--loading">
-                    <span className="ai-typing-dot" />
-                    <span className="ai-typing-dot" />
-                    <span className="ai-typing-dot" />
-                  </div>
-                </div>
-              )}
-            </>
+            messages.map((msg, i) => <Message key={i} msg={msg} />)
+          )}
+          {error && (
+            <div className="banner banner--warning" style={{ margin: '0' }}>
+              <span className="material-symbols-outlined">error</span>{error}
+            </div>
           )}
           <div ref={bottomRef} />
         </div>
-
-        {error && (
-          <div className="banner banner--warning" style={{ margin: '0 var(--sp-4)' }}>
-            <span className="material-symbols-outlined">error</span>
-            {error}
-          </div>
-        )}
 
         <div className="ai-chat__input-row">
           <textarea
             ref={inputRef}
             className="ai-chat__input"
-            placeholder="Ask anything about your business… (Enter to send)"
+            placeholder="Ask anything… (Enter to send, Shift+Enter for new line)"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKey}
@@ -197,9 +193,12 @@ export default function AiPage() {
             className="ai-chat__send"
             onClick={() => sendMessage()}
             disabled={!input.trim() || loading}
-            aria-label="Send message"
+            aria-label="Send"
           >
-            <span className="material-symbols-outlined">send</span>
+            {loading
+              ? <span className="spinner" style={{ width: '1rem', height: '1rem', borderTopColor: '#fff', borderWidth: '2px' }} />
+              : <span className="material-symbols-outlined">send</span>
+            }
           </button>
         </div>
       </div>

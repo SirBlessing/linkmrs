@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { api } from '../api/client.js';
+
+const BASE = import.meta.env.VITE_API_URL || 'https://linkmrs.onrender.com';
 
 function Message({ msg }) {
   const isUser = msg.role === 'user';
@@ -11,9 +12,10 @@ function Message({ msg }) {
         </div>
       )}
       <div className="ai-cust-msg__bubble">
-        {msg.content.split('\n').map((line, i) => (
-          <p key={i} style={{ margin: '0 0 0.2rem' }}>{line}</p>
-        ))}
+        {msg.content
+          ? msg.content.split('\n').map((line, i) => <p key={i} style={{ margin: '0 0 0.2rem' }}>{line}</p>)
+          : <span className="ai-typing-placeholder">▍</span>
+        }
       </div>
     </div>
   );
@@ -27,72 +29,96 @@ export default function AiCustomerChat({ shopSlug, shopName }) {
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
 
-  // Greeting on first open
   useEffect(() => {
     if (open && messages.length === 0) {
       setMessages([{
         role:    'assistant',
-        content: `Hi! 👋 I'm the AI assistant for ${shopName}. Ask me anything — what's available, prices, or what to get within your budget. I understand English and Pidgin!`,
+        content: `Hi! 👋 I'm the AI assistant for ${shopName}. Ask me anything — what's available, prices, what to get within your budget. I understand English and Pidgin!`,
       }]);
     }
-    if (open) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
+    if (open) setTimeout(() => inputRef.current?.focus(), 100);
   }, [open]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+  }, [messages]);
 
   const send = async (text) => {
     const msg = (text || input).trim();
     if (!msg || loading) return;
     setInput('');
 
-    const userMsg = { role: 'user', content: msg };
-    const history = [...messages];
-    setMessages((p) => [...p, userMsg]);
+    const prevMsgs = [...messages];
+    setMessages([...prevMsgs, { role: 'user', content: msg }, { role: 'assistant', content: '' }]);
     setLoading(true);
 
     try {
-      const { reply } = await api.aiCustomer({
-        shopSlug,
-        message: msg,
-        history,
+      const response = await fetch(`${BASE}/api/ai/customer`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ shopSlug, message: msg, history: messages }),
       });
-      setMessages((p) => [...p, { role: 'assistant', content: reply }]);
+
+      if (!response.ok) throw new Error('Failed');
+
+      const reader  = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const text  = decoder.decode(value);
+        const lines = text.split('\n').filter((l) => l.startsWith('data: '));
+
+        for (const line of lines) {
+          const data = line.replace('data: ', '').trim();
+          if (data === '[DONE]') break;
+          try {
+            const { chunk } = JSON.parse(data);
+            if (chunk) {
+              setMessages((p) => {
+                const updated = [...p];
+                updated[updated.length - 1] = {
+                  role:    'assistant',
+                  content: updated[updated.length - 1].content + chunk,
+                };
+                return updated;
+              });
+            }
+          } catch {}
+        }
+      }
     } catch {
-      setMessages((p) => [
-        ...p,
-        { role: 'assistant', content: 'Sorry, I\'m having trouble right now. Please try again.' },
-      ]);
+      setMessages((p) => {
+        const updated = [...p];
+        updated[updated.length - 1] = {
+          role:    'assistant',
+          content: "Sorry, I'm having trouble right now. Please try again.",
+        };
+        return updated;
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleKey = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+    if (e.key === 'Enter') { e.preventDefault(); send(); }
   };
 
   return (
     <>
-      {/* Floating chat bubble */}
       <button
         type="button"
         className={`ai-chat-bubble ${open ? 'is-open' : ''}`}
         onClick={() => setOpen((v) => !v)}
         aria-label="Chat with AI assistant"
       >
-        <span className="material-symbols-outlined">
-          {open ? 'close' : 'smart_toy'}
-        </span>
-        {!open && (
-          <span className="ai-chat-bubble__label">Ask AI</span>
-        )}
+        <span className="material-symbols-outlined">{open ? 'close' : 'smart_toy'}</span>
+        {!open && <span className="ai-chat-bubble__label">Ask AI</span>}
       </button>
 
-      {/* Chat panel */}
       {open && (
         <div className="ai-cust-panel">
           <div className="ai-cust-panel__header">
@@ -103,32 +129,13 @@ export default function AiCustomerChat({ shopSlug, shopName }) {
                 <p className="ai-cust-panel__sub">{shopName}</p>
               </div>
             </div>
-            <button
-              type="button"
-              className="icon-btn"
-              onClick={() => setOpen(false)}
-              aria-label="Close chat"
-            >
+            <button type="button" className="icon-btn" onClick={() => setOpen(false)} aria-label="Close">
               <span className="material-symbols-outlined">close</span>
             </button>
           </div>
 
           <div className="ai-cust-panel__thread">
-            {messages.map((msg, i) => (
-              <Message key={i} msg={msg} />
-            ))}
-            {loading && (
-              <div className="ai-cust-msg ai-cust-msg--bot">
-                <div className="ai-cust-msg__avatar">
-                  <span className="material-symbols-outlined">smart_toy</span>
-                </div>
-                <div className="ai-cust-msg__bubble ai-cust-msg__bubble--loading">
-                  <span className="ai-typing-dot" />
-                  <span className="ai-typing-dot" />
-                  <span className="ai-typing-dot" />
-                </div>
-              </div>
-            )}
+            {messages.map((msg, i) => <Message key={i} msg={msg} />)}
             <div ref={bottomRef} />
           </div>
 
@@ -150,7 +157,10 @@ export default function AiCustomerChat({ shopSlug, shopName }) {
               disabled={!input.trim() || loading}
               aria-label="Send"
             >
-              <span className="material-symbols-outlined">send</span>
+              {loading
+                ? <span className="spinner" style={{ width: '0.875rem', height: '0.875rem', borderTopColor: '#fff', borderWidth: '2px' }} />
+                : <span className="material-symbols-outlined">send</span>
+              }
             </button>
           </div>
         </div>
