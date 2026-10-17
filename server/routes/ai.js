@@ -10,7 +10,7 @@ const genAI  = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 async function callAI(systemPrompt, history, userMessage, res = null) {
   const model = genAI.getGenerativeModel({
-    model:             'gemini-2.0-flash',
+    model:             'gemini-3.8-flash',
     systemInstruction: systemPrompt,
   });
 
@@ -156,7 +156,7 @@ router.post('/build-shop', requireAuth, async (req, res) => {
     if (!description?.trim())
       return res.status(400).json({ error: 'Business description is required.' });
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
 
     const prompt = `You are helping a Nigerian micro-vendor set up their online shop on Linkmrs.
 Based on their description, generate a shop profile and up to 5 products.
